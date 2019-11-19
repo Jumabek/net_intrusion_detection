@@ -15,10 +15,12 @@ class LinearClassifier:
         self.reg= reg
         self.lossfunction = lossfunction
         self.runs_dir = runs_dir
+        self.device='cpu'
         self.build()
 
     def build(self):
-        self.model = nn.Linear(self.input_size, self.num_classes)
+
+        self.model = nn.Linear(self.input_size, self.num_classes).to(self.device)
         print("Model is created")
         if self.lossfunction=='softmax':
             self.criterion = nn.CrossEntropyLoss()
@@ -33,8 +35,8 @@ class LinearClassifier:
     def fit(self,x,y,verbose=True):
         writer = SummaryWriter(self.runs_dir) 
 
-        tensor_x = torch.stack([torch.Tensor(i) for i in x])
-        tensor_y = torch.LongTensor(y) # checked working correctly
+        tensor_x = torch.stack([torch.Tensor(i) for i in x]).to(self.device)
+        tensor_y = torch.LongTensor(y).to(self.device) # checked working correctly
         dataset = utils.TensorDataset(tensor_x,tensor_y)
         train_loader = utils.DataLoader(dataset,batch_size=self.batch_size) 
         for epoch in range(self.num_epochs):
@@ -53,11 +55,11 @@ class LinearClassifier:
         writer.close()
 
     def predict(self,x):
-        tensor_x = torch.stack([torch.Tensor(i) for i in x])
+        tensor_x = torch.stack([torch.Tensor(i) for i in x]).to(self.device)
         bs = self.batch_size
         num_batch = x.shape[0]//bs +1*(x.shape[0]%bs!=0)
 
-        pred = torch.zeros(0,dtype=torch.int64)
+        pred = torch.zeros(0,dtype=torch.int64).to(self.device)
         with torch.no_grad():
             for i in range(num_batch):
                 xi = tensor_x[i*bs:(i+1)*bs]
