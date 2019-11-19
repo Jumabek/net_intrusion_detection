@@ -9,7 +9,6 @@ class Net(nn.Module):
 
     def __init__(self,input_size,num_classes):
         super(Net, self).__init__()
-        # 1 input image channel, 6 output channels, 3x3 square convolution
         # kernel
         self.input_size = input_size
         self.num_classes = num_classes
@@ -17,7 +16,7 @@ class Net(nn.Module):
 
     def build(self):
 
-        self.fc1 = nn.Linear(self.input_size, 128)  # 6*6 from image dimension
+        self.fc1 = nn.Linear(self.input_size, 128)  
         self.fc2 = nn.Linear(128, 128)
         self.fc3 = nn.Linear(128, self.num_classes)
         
