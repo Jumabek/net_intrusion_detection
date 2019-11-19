@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 import torch.utils.data as utils
 from torch.utils.tensorboard import SummaryWriter
+import numpy as np
 
 class Net(nn.Module):
 
@@ -63,11 +64,12 @@ class NetClassifier():
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
-                if i%10==0 and verbose:
+                if i%100==0 :
                     pred = self.predict(x_val)
                     acc = np.mean(pred==y_val)*100
                     writer.add_scalar('Accuracy/Val',acc,seen_so_far)
-                    print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}' 
+                    if verbose:
+                        print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}' 
                                                .format(epoch+1, self.num_epochs, i+1, len(y)//self.batch_size, loss.item()))
         writer.close()
 
