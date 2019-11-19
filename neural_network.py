@@ -43,11 +43,12 @@ class NetClassifier():
         self.optimizer = torch.optim.Adam(self.model.parameters(),lr=lr,betas=(0.9,0.99),eps=1e-08, weight_decay=reg, amsgrad=False)
 
   
-    def fit(self,x,y,verbose=True):
+    def fit(self,x,y,x_val,y_val,verbose=True):
         writer = SummaryWriter(self.runs_dir) 
 
         tensor_x = torch.stack([torch.Tensor(i) for i in x]).to(self.device)
         tensor_y = torch.LongTensor(y).to(self.device) # checked working correctly
+
         dataset = utils.TensorDataset(tensor_x,tensor_y)
         train_loader = utils.DataLoader(dataset,batch_size=self.batch_size) 
         model = self.model
@@ -63,6 +64,9 @@ class NetClassifier():
                 loss.backward()
                 self.optimizer.step()
                 if i%10==0 and verbose:
+                    pred = self.predict(x_val)
+                    acc = np.mean(pred==y_val)*100
+                    writer.add_scalar('Accuracy/Val',acc,seen_so_far)
                     print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}' 
                                                .format(epoch+1, self.num_epochs, i+1, len(y)//self.batch_size, loss.item()))
         writer.close()
