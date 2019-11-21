@@ -42,7 +42,7 @@ class Net(nn.Module):
 class Net5(nn.Module):
 
     def __init__(self,input_size,num_classes,use_batchnorm=False):
-        super(Net, self).__init__()
+        super(Net5, self).__init__()
         # kernel
         self.input_size = input_size
         self.num_classes = num_classes
@@ -52,11 +52,11 @@ class Net5(nn.Module):
         layers.append(nn.Linear(input_size,128))
 
         layers.append(nn.BatchNorm1d(128))
-        layers.append(nn.Dropout(p=0.3))
+        
         layers.append(nn.Linear(128,256))
         
         layers.append(nn.BatchNorm1d(256))
-        layers.append(nn.Dropout(p=0.4))
+        layers.append(nn.Dropout(p=0.3))
         layers.append(nn.Linear(256,256))
         
         layers.append(nn.BatchNorm1d(256))
@@ -64,7 +64,7 @@ class Net5(nn.Module):
         layers.append(nn.Linear(256,128))
 
         layers.append(nn.BatchNorm1d(128))
-        layers.append(nn.Dropout(p=0.3))        
+        layers.append(nn.Dropout(p=0.5))        
         layers.append(nn.Linear(128,num_classes))
         self.model = nn.Sequential(*layers)
         
@@ -73,11 +73,12 @@ class Net5(nn.Module):
 
 class NetClassifier():
     def __init__(self, input_size,num_classes,num_epochs=5,batch_size=100,lr=5e-3,reg=2.5e-2,runs_dir=None,use_batchnorm=False):
-        self.model = Net(input_size,num_classes,use_batchnorm)
+        self.model = Net5(input_size,num_classes,use_batchnorm)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = self.model.to(self.device)
 
         self.num_epochs = num_epochs
+        self.num_classes = num_classes
         self.batch_size = batch_size
         self.lr = lr
         self.reg = reg
@@ -108,11 +109,19 @@ class NetClassifier():
                 loss.backward()
                 self.optimizer.step()
                 if i%50==0 :
-                    pred = self.predict(x_val)
+                    raw_pred,pred = self.predict(x_val)
                     balanced_acc = metrics.balanced_accuracy_score(y_val,pred)*100
                     if balanced_acc>best_acc:
                         best_acc = balanced_acc
-                        self.save(model) 
+                        
+                        checkpoint = {
+                        'state_dict': model.state_dict(),
+                        'optimizer' : self.optimizer.state_dict(),
+                        'seen_so_far':seen_so_far,
+                        'batch_size': self.batch_size,
+                        'N':len(train_loader)
+                        }
+                        self.save(checkpoint) 
                     writer.add_scalar('Accuracy/Balanced Val',balanced_acc,seen_so_far)
 
                     acc = metrics.accuracy_score(y_val,pred)*100
@@ -129,9 +138,9 @@ class NetClassifier():
         num_batch = x.shape[0]//bs +1*(x.shape[0]%bs!=0)
 
         pred = torch.zeros(0,dtype=torch.int64).to(self.device)
-        
+        raw_pred = torch.zeros((0,self.num_classes)).to(self.device)
         if eval_mode:
-            model = self.load(self.model)
+            model = self.load_checkpoint()
         else:
             model = self.model
         model.eval()
@@ -139,18 +148,27 @@ class NetClassifier():
         with torch.no_grad():
             for i in range(num_batch):
                 xi = tensor_x[i*bs:(i+1)*bs]
-                outputs = model(xi)
+                outputs = model(xi) # N,C
                 _, predi = torch.max(outputs.data,1)
                 pred = torch.cat((pred,predi))
-        
-        return pred.cpu().numpy()
+                raw_pred = torch.cat((raw_pred,outputs.data))
+        return raw_pred.cpu().numpy(),pred.cpu().numpy()
 
-    def save(self,model):
+    def save(self,checkpoint):
         path = join(self.runs_dir,'checkpoint.pth')
-        torch.save(model.state_dict(),path)
+        torch.save(checkpoint,path)
 
-    def load(self,model):
-        path = join(self.runs_dir,'checkpoint.pth')
-        model.load_state_dict(torch.load(path))
-        model.eval()
+
+    def load_checkpoint(self,inference_mode=True):
+        filepath = join(self.runs_dir,'checkpoint.pth')
+        checkpoint = torch.load(filepath)
+        model = self.model
+        model.load_state_dict(checkpoint['state_dict'])
+        print("Loaded model with has batch_size = {}, seen {} examlpes from dataset of size {}",
+        checkpoint['batch_size'],checkpoint['seen_so_far'],checkpoint['N'])
+    
+        if inference_mode:
+            for parameter in model.parameters():
+                parameter.requires_grad = False
+            model.eval()
         return model
