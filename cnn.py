@@ -7,77 +7,36 @@ from torch.utils.tensorboard import SummaryWriter
 from sklearn import metrics
 from os.path import join
 
-class Net(nn.Module):
+
+class CNN5(nn.Module):
 
     def __init__(self,input_size,num_classes,use_batchnorm=False):
-        super(Net, self).__init__()
+        super(CNN5, self).__init__()
         # kernel
-        self.input_size = input_size
+        self.input_size = input_size 
         self.num_classes = num_classes
         self.use_batchnorm = use_batchnorm
-        self.build()
+        
+        conv_layers = []
+        conv_layers.append(nn.Conv1d(in_channels=1,out_channels=64,kernel_size=3,padding=1))
+        conv_layers.append(nn.ReLU(True))
+        conv_layers.append(nn.Conv1d(in_channels=64,out_channels=128,kernel_size=3,padding=1)) #(input_size,128)
+        conv_layers.append(nn.ReLU(True))
+        self.conv = nn.Sequential(*conv_layers)
 
-    def build(self):
-
-        self.drop1 = nn.Dropout(p=0.1)
-        self.fc1 = nn.Linear(self.input_size, 128)
-        self.bn1 = nn.BatchNorm1d(num_features=128) 
-        self.drop2 = nn.Dropout(p=0.3) 
-        self.fc2 = nn.Linear(128, 128)
-        self.bn2 = nn.BatchNorm1d(num_features=128)
-        self.fc3 = nn.Linear(128, self.num_classes)
-
+        layers = []
+        layers.append(nn.Linear(input_size*128,num_classes))
+        self.classifier = nn.Sequential(*layers)
         
     def forward(self, x):
-        if self.use_batchnorm:
-            x = F.relu(self.drop1(self.bn1(self.fc1(x))))
-            x = F.relu(self.drop2(self.bn2(self.fc2(x))))
-        else:
-            x = F.relu(self.fc1(x))
-            x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = self.conv(x)
+        x = torch.flatten(x,1)
+        x = self.classifier(x)
         return x
 
-
-class Net5(nn.Module):
-
-    def __init__(self,input_size,num_classes,use_batchnorm=False):
-        super(Net5, self).__init__()
-        # kernel
-        self.input_size = input_size
-        self.num_classes = num_classes
-        self.use_batchnorm = use_batchnorm
-        
-        layers = []
-        layers.append(nn.Linear(input_size,128))
-
-        layers.append(nn.BatchNorm1d(128))
-        layers.append(nn.ReLU(True))
-        layers.append(nn.Linear(128,256))
-        
-        layers.append(nn.BatchNorm1d(256))
-        layers.append(nn.Dropout(p=0.3))
-        layers.append(nn.ReLU(True))
-        layers.append(nn.Linear(256,256))
-        
-        layers.append(nn.BatchNorm1d(256))
-        layers.append(nn.Dropout(p=0.4))
-        layers.append(nn.ReLU(True))
-        layers.append(nn.Linear(256,128))
-
-        layers.append(nn.BatchNorm1d(128))
-        layers.append(nn.Dropout(p=0.5))
-        layers.append(nn.ReLU(True))        
-        layers.append(nn.Linear(128,num_classes))
-
-        self.model = nn.Sequential(*layers)
-        
-    def forward(self, x):
-        return self.model(x)
-
-class NetClassifier():
+class CNNClassifier():
     def __init__(self, input_size,num_classes,num_epochs=5,batch_size=100,lr=5e-3,reg=2.5e-2,runs_dir=None,use_batchnorm=False):
-        self.model = Net5(input_size,num_classes,use_batchnorm)
+        self.model = CNN5(input_size,num_classes,use_batchnorm)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = self.model.to(self.device)
 
@@ -102,9 +61,13 @@ class NetClassifier():
         train_loader = utils.DataLoader(dataset,batch_size=self.batch_size) 
         model = self.model
         best_acc = -1
-
         for epoch in range(self.num_epochs):
             for i,(xi,yi) in enumerate(train_loader):
+                # xi (bs,D)
+                batch_size, D = xi.shape
+                xi = xi.view(batch_size,1,D)
+                print('xi.shape = ',xi.shape)
+                
                 outputs = model(xi)
                 loss = self.criterion(outputs,yi)
                 seen_so_far = self.batch_size*(epoch*len(train_loader)+i+1) # fixes issues with different batch size
@@ -122,9 +85,9 @@ class NetClassifier():
                         checkpoint = {
                         'state_dict': model.state_dict(),
                         'optimizer' : self.optimizer.state_dict(),
-                        'epoch':epoch,
-                        'batch': i,
-                        'batch_size': self.batch_size
+                        'seen_so_far':seen_so_far,
+                        'batch_size': self.batch_size,
+                        'N':len(train_loader)
                         }
                         self.save(checkpoint) 
                     writer.add_scalar('Accuracy/Balanced Val',balanced_acc,seen_so_far)
@@ -169,11 +132,8 @@ class NetClassifier():
         checkpoint = torch.load(filepath)
         model = self.model
         model.load_state_dict(checkpoint['state_dict'])
-        N = checkpoint['N']
-        bs = checkpoint['batch_size']
-        seen_so_far = checkpoint['seen_so_far']
-        print("Loaded model with has batch_size = {}, seen {} epoch and {} batch".
-            format(checkpoint['batch_size'],checkpoint['epoch'],checkpoint['batch']))
+        print("Loaded model with has batch_size = {}, seen {} examlpes from dataset of size {}",
+        checkpoint['batch_size'],checkpoint['seen_so_far'],checkpoint['N'])
     
         if inference_mode:
             for parameter in model.parameters():
