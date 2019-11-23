@@ -134,8 +134,6 @@ class CNNClassifier():
         model = self.model
         model.load_state_dict(checkpoint['state_dict'])
         
-        bs = checkpoint['batch_size']
-        seen_so_far = checkpoint['seen_so_far']
         print("Loaded model with has batch_size = {}, seen {} epoch and {} batch".
             format(checkpoint['batch_size'],checkpoint['epoch'],checkpoint['batch']))
     
