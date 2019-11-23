@@ -66,7 +66,6 @@ class CNNClassifier():
                 # xi (bs,D)
                 batch_size, D = xi.shape
                 xi = xi.view(batch_size,1,D)
-                print('xi.shape = ',xi.shape)
                 
                 outputs = model(xi)
                 loss = self.criterion(outputs,yi)
@@ -85,9 +84,9 @@ class CNNClassifier():
                         checkpoint = {
                         'state_dict': model.state_dict(),
                         'optimizer' : self.optimizer.state_dict(),
-                        'seen_so_far':seen_so_far,
-                        'batch_size': self.batch_size,
-                        'N':len(train_loader)
+                        'epoch':epoch,
+                        'batch': i,
+                        'batch_size': self.batch_size
                         }
                         self.save(checkpoint) 
                     writer.add_scalar('Accuracy/Balanced Val',balanced_acc,seen_so_far)
@@ -134,8 +133,11 @@ class CNNClassifier():
         checkpoint = torch.load(filepath)
         model = self.model
         model.load_state_dict(checkpoint['state_dict'])
-        print("Loaded model with has batch_size = {}, seen {} examlpes from dataset of size {}",
-        checkpoint['batch_size'],checkpoint['seen_so_far'],checkpoint['N'])
+        
+        bs = checkpoint['batch_size']
+        seen_so_far = checkpoint['seen_so_far']
+        print("Loaded model with has batch_size = {}, seen {} epoch and {} batch".
+            format(checkpoint['batch_size'],checkpoint['epoch'],checkpoint['batch']))
     
         if inference_mode:
             for parameter in model.parameters():

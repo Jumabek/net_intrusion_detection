@@ -169,7 +169,7 @@ class NetClassifier():
         checkpoint = torch.load(filepath)
         model = self.model
         model.load_state_dict(checkpoint['state_dict'])
-        N = checkpoint['N']
+        
         bs = checkpoint['batch_size']
         seen_so_far = checkpoint['seen_so_far']
         print("Loaded model with has batch_size = {}, seen {} epoch and {} batch".
