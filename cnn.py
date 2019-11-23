@@ -116,6 +116,8 @@ class CNNClassifier():
         with torch.no_grad():
             for i in range(num_batch):
                 xi = tensor_x[i*bs:(i+1)*bs]
+                batch_size, D = xi.shape
+                xi = xi.view(batch_size,1,D)
                 outputs = model(xi) # N,C
                 _, predi = torch.max(outputs.data,1)
                 pred = torch.cat((pred,predi))
