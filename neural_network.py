@@ -170,8 +170,8 @@ class NetClassifier():
         model = self.model
         model.load_state_dict(checkpoint['state_dict'])
         
-        print("Loaded model with has batch_size = {}, seen {} epoch and {} batch".
-            format(checkpoint['batch_size'],checkpoint['epoch'],checkpoint['batch']))
+        print("Loaded {} model trained with batch_size = {}, seen {} epochs and {} mini batches".
+            format(self.runs_dir,checkpoint['batch_size'],checkpoint['epoch'],checkpoint['batch']))
     
         if inference_mode:
             for parameter in model.parameters():

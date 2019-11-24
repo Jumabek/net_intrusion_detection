@@ -8,25 +8,30 @@ from sklearn import metrics
 from os.path import join
 
 
-class CNN5(nn.Module):
+class CNN2(nn.Module):
 
-    def __init__(self,input_size,num_classes,use_batchnorm=False):
-        super(CNN5, self).__init__()
+    def __init__(self,input_dim,num_classes,use_batchnorm=False):
+        super(CNN2, self).__init__()
         # kernel
-        self.input_size = input_size 
+        self.input_dim = input_dim 
         self.num_classes = num_classes
         self.use_batchnorm = use_batchnorm
         
         conv_layers = []
-        conv_layers.append(nn.Conv1d(in_channels=1,out_channels=64,kernel_size=3,padding=1))
+        
+        conv_layers.append(nn.Conv1d(in_channels=1,out_channels=64,kernel_size=3,padding=1)) # ;input_dim,64
+        conv_layers.append(nn.BatchNorm1d(64))
         conv_layers.append(nn.ReLU(True))
-        conv_layers.append(nn.Conv1d(in_channels=64,out_channels=128,kernel_size=3,padding=1)) #(input_size,128)
+
+        conv_layers.append(nn.Conv1d(in_channels=64,out_channels=128,kernel_size=3,padding=1)) #(input_dim,128)
+        conv_layers.append(nn.BatchNorm1d(128))
         conv_layers.append(nn.ReLU(True))
+        
         self.conv = nn.Sequential(*conv_layers)
 
-        layers = []
-        layers.append(nn.Linear(input_size*128,num_classes))
-        self.classifier = nn.Sequential(*layers)
+        fc_layers = []
+        fc_layers.append(nn.Linear(input_dim*128,num_classes))
+        self.classifier = nn.Sequential(*fc_layers)
         
     def forward(self, x):
         x = self.conv(x)
@@ -34,9 +39,12 @@ class CNN5(nn.Module):
         x = self.classifier(x)
         return x
 
+
+
+
 class CNNClassifier():
-    def __init__(self, input_size,num_classes,num_epochs=5,batch_size=100,lr=5e-3,reg=2.5e-2,runs_dir=None,use_batchnorm=False):
-        self.model = CNN5(input_size,num_classes,use_batchnorm)
+    def __init__(self, input_dim,num_classes,num_epochs=5,batch_size=100,lr=5e-3,reg=2.5e-2,runs_dir=None,use_batchnorm=False):
+        self.model = CNN2(input_dim,num_classes,use_batchnorm)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = self.model.to(self.device)
 
@@ -134,8 +142,8 @@ class CNNClassifier():
         model = self.model
         model.load_state_dict(checkpoint['state_dict'])
         
-        print("Loaded model with has batch_size = {}, seen {} epoch and {} batch".
-            format(checkpoint['batch_size'],checkpoint['epoch'],checkpoint['batch']))
+        print("Loaded {} model trained with batch_size = {}, seen {} epochs and {} mini batches".
+            format(self.runs_dir,checkpoint['batch_size'],checkpoint['epoch'],checkpoint['batch']))
     
         if inference_mode:
             for parameter in model.parameters():
