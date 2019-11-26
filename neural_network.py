@@ -10,7 +10,7 @@ from os.path import join
 class Net3(nn.Module):
 
     def __init__(self,input_size,num_classes,use_batchnorm=False):
-        super(Net, self).__init__()
+        super(Net3, self).__init__()
         # kernel
         print('building NN3')
         self.input_size = input_size

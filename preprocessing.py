@@ -9,21 +9,26 @@ def read_data(dataroot,file_ending='*.pcap_ISCX.csv'):
         exit()
     print(join(dataroot,file_ending))
     filenames = [i for i in glob.glob(join(dataroot,file_ending))]
-    combined_csv = pd.concat([pd.read_csv(f) for f in filenames],sort=False)
+    combined_csv = pd.concat([pd.read_csv(f,dtype=object) for f in filenames],sort=False)
     return combined_csv
 
  # reads csv file and returns np array of X,y -> of shape (N,D) and (N,1)
 def load_data(dataroot):
     data = read_data(dataroot,'*.pcap_ISCX.csv')
     num_records,num_features = data.shape
-    print("{} flow records read which has {} feature dimension".format(num_records,num_features))
+    print("there are {} flow records with {} feature dimension".format(num_records,num_features))
     # there is white spaces in columns names e.g. ' Destination Port'
     # So strip the whitespace from  column names
     data = data.rename(columns=lambda x: x.strip())
+    print('stripped col names')
     df_label = data['Label']
     data = data.drop(columns=['Flow Packets/s','Flow Bytes/s','Label'])
+    print('dropped bad columns')
     data.fillna(data.mean(), inplace=True)
+    print('filled NAN')
+
     data = data.astype(float).apply(pd.to_numeric)
+    print('converted to numeric')
     # lets count if there is NaN values in our dataframe( AKA missing features)
     assert data.isnull().sum().sum()==0, "There should not be any NaN"
     X = data.values
@@ -31,10 +36,11 @@ def load_data(dataroot):
     return (X,y)
 
 
-#Since data above is imbalanced we balance data:
+#We balance data as follows:
 #1) oversample small classes so that their population/count is equal to mean_number_of_samples_per_class
 #2) undersample large classes so that their count is equal to mean_number_of_samples_per_class
-def balance_data(X,y):
+def balance_data(X,y,seed):
+    np.random.seed(seed)
     unique,counts = np.unique(y,return_counts=True)
     mean_samples_per_class = int(round(np.mean(counts)))
     N,D = X.shape #(number of examples, number of features)
