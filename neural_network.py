@@ -7,11 +7,12 @@ from torch.utils.tensorboard import SummaryWriter
 from sklearn import metrics
 from os.path import join
 
-class Net(nn.Module):
+class Net3(nn.Module):
 
     def __init__(self,input_size,num_classes,use_batchnorm=False):
         super(Net, self).__init__()
         # kernel
+        print('building NN3')
         self.input_size = input_size
         self.num_classes = num_classes
         self.use_batchnorm = use_batchnorm
@@ -77,7 +78,7 @@ class Net5(nn.Module):
 
 class NetClassifier():
     def __init__(self, input_size,num_classes,num_epochs=5,batch_size=100,lr=5e-3,reg=2.5e-2,runs_dir=None,use_batchnorm=False):
-        self.model = Net5(input_size,num_classes,use_batchnorm)
+        self.model = Net3(input_size,num_classes,use_batchnorm)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = self.model.to(self.device)
 
