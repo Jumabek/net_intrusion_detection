@@ -1,3 +1,5 @@
+__author__ = 'Jumabek Alikhan'
+__data__ = 'Nov 26,2019'
 import numpy as np
 import pandas as pd
 from os.path import join
@@ -20,15 +22,22 @@ def load_data(dataroot):
     # there is white spaces in columns names e.g. ' Destination Port'
     # So strip the whitespace from  column names
     data = data.rename(columns=lambda x: x.strip())
-    print('stripped col names')
+    print('stripped column names')
+
     df_label = data['Label']
     data = data.drop(columns=['Flow Packets/s','Flow Bytes/s','Label'])
     print('dropped bad columns')
-    data.fillna(data.mean(), inplace=True)
-    print('filled NAN')
+    
+    nan_count = data.isnull().sum().sum()
+    print('There are {} nan entries'.format(nan_count))
+    
+    if nan_count>0:
+        data.fillna(data.mean(), inplace=True)
+        print('filled NAN')
 
     data = data.astype(float).apply(pd.to_numeric)
     print('converted to numeric')
+    
     # lets count if there is NaN values in our dataframe( AKA missing features)
     assert data.isnull().sum().sum()==0, "There should not be any NaN"
     X = data.values
@@ -68,6 +77,7 @@ def encode_label(Y_str):
     Y = np.array(Y)
     return np.array(Y)
 
+
 def make_value2index(attacks):
     #make dictionary
     attacks = sorted(attacks)
@@ -77,7 +87,6 @@ def make_value2index(attacks):
         d[attack] = counter
         counter+=1
     return d
-
 
 
 # normalization
