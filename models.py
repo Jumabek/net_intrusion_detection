@@ -56,7 +56,6 @@ class CNN2(nn.Module):
 
 
 class Net3(nn.Module):
-
     def __init__(self,input_dim,num_classes,device):
         super(Net3, self).__init__()
         # kernel
@@ -65,7 +64,6 @@ class Net3(nn.Module):
         self.num_classes = num_classes
 
         layers = []
-
         layers.append(nn.Dropout(p=0.1))
         layers.append(nn.Linear(self.input_dim, 128))
         layers.append(nn.BatchNorm1d(num_features=128)) 
@@ -78,6 +76,42 @@ class Net3(nn.Module):
     def forward(self, x):
         x = self.classifier(x)
         return x
+
+
+class Net5(nn.Module):
+    def __init__(self,input_dim,num_classes,device):
+        super(Net5, self).__init__()
+        # kernel
+        self.input_dim = input_dim
+        self.num_classes = num_classes
+        
+        layers = []
+        layers.append(nn.Linear(input_dim,128))
+
+        layers.append(nn.BatchNorm1d(128))
+        layers.append(nn.ReLU(True))
+        layers.append(nn.Linear(128,256))
+        
+        layers.append(nn.BatchNorm1d(256))
+        layers.append(nn.Dropout(p=0.3))
+        layers.append(nn.ReLU(True))
+        layers.append(nn.Linear(256,256))
+        
+        layers.append(nn.BatchNorm1d(256))
+        layers.append(nn.Dropout(p=0.4))
+        layers.append(nn.ReLU(True))
+        layers.append(nn.Linear(256,128))
+
+        layers.append(nn.BatchNorm1d(128))
+        layers.append(nn.Dropout(p=0.5))
+        layers.append(nn.ReLU(True))        
+        layers.append(nn.Linear(128,num_classes))
+
+        self.model = nn.Sequential(*layers).to(device)
+        
+    def forward(self, x):
+        return self.model(x)
+
 
 
 class Classifier:
@@ -99,6 +133,9 @@ class Classifier:
         elif method=='nn3':
             self.device = torch.device('cuda:0')
             self.model = Net3(input_dim,num_classes=num_classes,device=self.device)        
+        elif method=='nn5':
+            self.device = torch.device('cuda:0')
+            self.model = Net5(input_dim,num_classes=num_classes,device=self.device)        
         else:
             print('There is no such classifier')
             exit()
@@ -121,7 +158,7 @@ class Classifier:
         dataset = utils.TensorDataset(tensor_x,tensor_y)        
         train_loader = utils.DataLoader(dataset,batch_size=self.batch_size) 
         N = tensor_x.shape[0]
-        
+
         num_epochs = self.num_epochs
 
         model  = self.model
