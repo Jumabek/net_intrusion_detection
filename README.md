@@ -6,11 +6,19 @@ Net intrusion detection experiment for DeepLearning class at Inha University. I 
 
 ## Accompanying slides https://docs.google.com/presentation/d/1HSK0IhHMcxS5Q6PLT2zoGo8GvWFdfCdTQNnz7yVYK4E/edit?usp=sharing
 
-## Linear Classifier notebook Softmax/SVM
-Simply run through Linear Classifiers(Softmax,SVM).ipynb notebook,  it will guide you, if you have issues, please let me know in issue session. will try my best to answer faster. 
 
 ### Softmax
-Default is to use softmax loss 
+Please run the Softmax.ipynb 
 
-### SVM
-To use SVM loss please change loss_function = 'softmax' to 'svm' in the notebook
+### NN
+Please run the NN.ipynb 
+There are two NN architectures:
+1. 'nn3' - 3 layers
+2. 'nn5' - 5 layers
+
+### 1D-CNN
+Please run the CNN.ipynb 
+There are two 1D-CNN architectures:
+1. 'cnn2' - 2 conv layers
+2. 'cnn5' - 5 conv layers
+
