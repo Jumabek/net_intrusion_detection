@@ -54,6 +54,49 @@ class CNN2(nn.Module):
         x = self.classifier(x)
         return x
 
+class CNN5(nn.Module):
+    def __init__(self,input_dim,num_classes,device):
+        super(CNN5, self).__init__()
+        # kernel
+        self.input_dim = input_dim
+        self.num_classes = num_classes
+
+        conv_layers = []
+        conv_layers.append(nn.Conv1d(in_channels=1,out_channels=64,kernel_size=3,padding=1)) # ;input_dim,64
+        conv_layers.append(nn.BatchNorm1d(64))
+        conv_layers.append(nn.ReLU(True))
+
+        conv_layers.append(nn.Conv1d(in_channels=64,out_channels=128,kernel_size=3,padding=1)) #(input_dim,128)
+        conv_layers.append(nn.BatchNorm1d(128))
+        conv_layers.append(nn.ReLU(True))
+
+        conv_layers.append(nn.Conv1d(in_channels=128,out_channels=256,kernel_size=3,padding=1)) #(input_dim,128)
+        conv_layers.append(nn.BatchNorm1d(256))
+        conv_layers.append(nn.ReLU(True))
+
+        conv_layers.append(nn.Conv1d(in_channels=256,out_channels=256,kernel_size=3,padding=1)) #(input_dim,128)
+        conv_layers.append(nn.BatchNorm1d(256))
+        conv_layers.append(nn.ReLU(True))
+
+        conv_layers.append(nn.Conv1d(in_channels=256,out_channels=128,kernel_size=3,padding=1)) #(input_dim,128)
+        conv_layers.append(nn.BatchNorm1d(128))
+        conv_layers.append(nn.ReLU(True))
+        
+        self.conv = nn.Sequential(*conv_layers).to(device)
+
+        fc_layers = []
+        fc_layers.append(nn.Linear(input_dim*128,num_classes))
+        self.classifier = nn.Sequential(*fc_layers).to(device)
+
+    def forward(self, x):
+        batch_size, D = x.shape
+        x = x.view(batch_size,1,D)
+
+        x = self.conv(x)
+        x = torch.flatten(x,1)
+        x = self.classifier(x)
+        return x
+
 
 class Net3(nn.Module):
     def __init__(self,input_dim,num_classes,device):
@@ -130,6 +173,10 @@ class Classifier:
         elif method=='cnn2':
             self.device = torch.device('cuda:2')
             self.model = CNN2(input_dim,num_classes=num_classes,device=self.device)        
+        elif method=='cnn5':
+            self.device = torch.device('cuda:1')
+            self.model = CNN5(input_dim,num_classes=num_classes,device=self.device)        
+
         elif method=='nn3':
             self.device = torch.device('cuda:0')
             self.model = Net3(input_dim,num_classes=num_classes,device=self.device)        
