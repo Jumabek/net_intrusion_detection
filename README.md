@@ -1,8 +1,13 @@
-# net_intrusion_detection_tutorial
-Net intrusion detection experiment for DeepLearning class at Inha University. I would be glad you benefit from it as well 
+# net_intrusion_detection
+Net intrusion detection experiment for Final Project of DeepLearning class at Inha University.
 
 ## dataset homepage: https://www.unb.ca/cic/datasets/ids-2017.html
 
+## Contributions
+1. Correct Evaluation Metric
+2. Adressing data imblance
+3. Benchmark results for different ML models
+4. Running code for training/evaluating 
 
 ## Accompanying slides
 https://docs.google.com/presentation/d/1Rjj1vF0hv8vSJWeDxk23nE4A4w3fv8tBdvsyIBpWTdU/edit?usp=sharing
