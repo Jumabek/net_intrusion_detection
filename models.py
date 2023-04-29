@@ -13,6 +13,9 @@ from os.path import join
 SEED=2
 
 class Softmax(nn.Module):
+    """ 
+    Softmax Regression Model
+    """
     def __init__(self,input_dim,num_classes,device):
         super(Softmax,self).__init__()
         self.classifier = nn.Linear(input_dim, num_classes).to(device)
@@ -24,6 +27,9 @@ class Softmax(nn.Module):
 
 
 class CNN2(nn.Module):
+    """ 
+    2-layer Convolutional Neural Network Model
+    """
     def __init__(self,input_dim,num_classes,device):
         super(CNN2, self).__init__()
         # kernel
@@ -55,6 +61,9 @@ class CNN2(nn.Module):
         return x
 
 class CNN5(nn.Module):
+    """ 
+    5-layer Convolutional Neural Network Model
+    """
     def __init__(self,input_dim,num_classes,device):
         super(CNN5, self).__init__()
         # kernel
@@ -99,6 +108,23 @@ class CNN5(nn.Module):
 
 
 class Net3(nn.Module):
+    """
+    A neural network model consisting of multiple layers, used for classification tasks.
+
+    Args:
+    - input_dim (int): The dimensionality of the input data.
+    - num_classes (int): The number of classes in the classification problem.
+    - device (str): The device to be used for running the computations.
+
+    Attributes:
+    - input_dim (int): The dimensionality of the input data.
+    - num_classes (int): The number of classes in the classification problem.
+    - device (str): The device to be used for running the computations.
+
+    Methods:
+    - forward(x): Defines the forward pass of the model, taking in an input tensor x and returning the output tensor.
+
+    """
     def __init__(self,input_dim,num_classes,device):
         super(Net3, self).__init__()
         # kernel
@@ -122,6 +148,19 @@ class Net3(nn.Module):
 
 
 class Net5(nn.Module):
+    """
+    A neural network model with 4 fully connected layers, using batch normalization and dropout for regularization.
+
+    Args:
+    - input_dim (int): the number of input features
+    - num_classes (int): the number of output classes
+    - device (torch.device): the device on which to run the model
+
+    Attributes:
+    - input_dim (int): the number of input features
+    - num_classes (int): the number of output classes
+    - model (nn.Sequential): the neural network architecture consisting of 4 fully connected layers
+    """
     def __init__(self,input_dim,num_classes,device):
         super(Net5, self).__init__()
         # kernel
@@ -158,6 +197,57 @@ class Net5(nn.Module):
 
 
 class Classifier:
+    """
+    A classifier for machine learning models using PyTorch.
+
+    Parameters
+    ----------
+    method : str
+        The method used for classification. Currently supported options are
+        'softmax', 'cnn2', 'cnn5', 'nn3', and 'nn5'.
+    input_dim : int
+        The number of input features.
+    num_classes : int
+        The number of classes.
+    num_epochs : int
+        The number of training epochs.
+    batch_size : int, optional
+        The batch size. Default is 100.
+    lr : float, optional
+        The learning rate. Default is 1e-3.
+    reg : float, optional
+        The regularization strength. Default is 1e-5.
+    runs_dir : str, optional
+        The directory for saving training runs. Default is None.
+
+    Attributes
+    ----------
+    batch_size : int
+        The batch size.
+    num_epochs : int
+        The number of training epochs.
+    learning_rate : float
+        The learning rate.
+    reg : float
+        The regularization strength.
+    runs_dir : str
+        The directory for saving training runs.
+    device : torch.device
+        The device used for training.
+    model : torch.nn.Module
+        The PyTorch model used for classification.
+    criterion : torch.nn.Module
+        The PyTorch criterion used for optimization.
+    optimizer : torch.optim.Optimizer
+        The PyTorch optimizer used for training.
+
+    Methods
+    -------
+    fit(X, Y)
+        Trains the classifier on the input data X and labels Y.
+    predict(x, eval_mode=False)
+        Predicts the labels for the input data x.
+    """
     def __init__(self,method,input_dim,num_classes,num_epochs,batch_size=100,lr=1e-3,reg=1e-5,runs_dir=None):
         self.batch_size = batch_size
         self.num_epochs = num_epochs
