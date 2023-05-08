@@ -2,3 +2,5 @@
 MachineLearningCSV.zip
 MachineLearningCVE/
 __pycache__/
+*.zip
+data/

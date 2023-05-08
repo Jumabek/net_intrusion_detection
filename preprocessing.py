@@ -11,12 +11,13 @@ def read_data(dataroot,file_ending='*.pcap_ISCX.csv'):
         exit()
     print(join(dataroot,file_ending))
     filenames = [i for i in glob.glob(join(dataroot,file_ending))]
+    print(filenames)
     combined_csv = pd.concat([pd.read_csv(f,dtype=object) for f in filenames],sort=False)
     return combined_csv
 
  # reads csv file and returns np array of X,y -> of shape (N,D) and (N,1)
 def load_data(dataroot):
-    data = read_data(dataroot,'*.pcap_ISCX.csv')
+    data = read_data(dataroot,'*.csv')
     num_records,num_features = data.shape
     print("there are {} flow records with {} feature dimension".format(num_records,num_features))
     # there is white spaces in columns names e.g. ' Destination Port'
