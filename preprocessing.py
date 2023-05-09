@@ -4,41 +4,56 @@ import numpy as np
 import pandas as pd
 from os.path import join
 import glob
+import dask.dataframe as dd
+from dask.diagnostics import ProgressBar
 
 def read_data(dataroot, file_ending='*.pcap_ISCX.csv'):
     """
-    Read CSV files with specified file ending in the dataroot directory and concatenate them into a single Pandas DataFrame.
+    Read CSV files with the specified file ending in the dataroot directory and concatenate them into a single Dask DataFrame.
     """
-    filenames = glob.glob(f"{dataroot}/{file_ending}")
-    if not filenames:
-        raise ValueError(f"No files found in {dataroot} with pattern {file_ending}")
-    combined_csv = pd.concat([pd.read_csv(f, dtype=object) for f in filenames], sort=False)
+    with ProgressBar():
+        filenames = glob.glob(f"{dataroot}/{file_ending}")
+        if not filenames:
+            raise ValueError(f"No files found in {dataroot} with pattern {file_ending}")
+        combined_csv = dd.read_csv(filenames, dtype=object).compute()
+        combined_csv.columns = combined_csv.columns.str.strip()  # Strip whitespace from column names
+        
     return combined_csv
 
- # reads csv file and returns np array of X,y -> of shape (N,D) and (N,1)
 def load_data(dataroot):
-    data = read_data(dataroot, '*.pcap_ISCX.csv')
-    num_records, num_features = data.shape
-    print(f"There are {num_records} flow records with {num_features} feature dimensions")
-
-    data = data.rename(columns=lambda x: x.strip())  # Strip whitespace from column names
+    data = read_data(dataroot,'*.pcap_ISCX.csv')
+    num_records,num_features = data.shape
+    print("there are {} flow records with {} feature dimension".format(num_records,num_features))
+    # there is white spaces in columns names e.g. ' Destination Port'
+    # So strip the whitespace from  column names
+    data = data.rename(columns=lambda x: x.strip())
+    print('stripped column names')
 
     df_label = data['Label']
-    data = data.drop(columns=['Flow Packets/s', 'Flow Bytes/s', 'Label'])
-
+    data = data.drop(columns=['Flow Packets/s','Flow Bytes/s','Label'])
+    print('dropped bad columns')
+    
     nan_count = data.isnull().sum().sum()
-    if nan_count > 0:
+    print('There are {} nan entries'.format(nan_count))
+    
+    if nan_count>0:
         data.fillna(data.mean(), inplace=True)
-        print('Filled NaN')
+        print('filled NAN')
 
-    X = normalize(data.astype(float).values)  # Normalize the input data
+    data = data.astype(float).apply(pd.to_numeric)
+    print('converted to numeric')
+    
+    # lets count if there is NaN values in our dataframe( AKA missing features)
+    assert data.isnull().sum().sum()==0, "There should not be any NaN"
+    X = normalize(data.values)
     y = encode_label(df_label.values)
-    return X, y
+    return (X,y)
 
 
 #We balance data as follows:
 #1) oversample small classes so that their population/count is equal to mean_number_of_samples_per_class
 #2) undersample large classes so that their count is equal to mean_number_of_samples_per_class
+
 
 def balance_data(X, y, seed):
     """
@@ -60,6 +75,7 @@ def balance_data(X, y, seed):
     new_X = new_X[indices, :]
     new_y = new_y[indices]
     return new_X, new_y
+
 
 
 # chganges label from string to integer/index
