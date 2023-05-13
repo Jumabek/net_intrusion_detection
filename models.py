@@ -258,7 +258,6 @@ class Classifier:
         self.reg= reg
         self.runs_dir = runs_dir
         self.seed = seed
-        self.method = method
         #self.device = 'cuda'
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
@@ -268,21 +267,21 @@ class Classifier:
         file_handler.setFormatter(file_formatter)
         self.logger.addHandler(file_handler)
         self.logger.info("Classifier initialized with method %s, input_dim %d, num_classes %d, num_epochs %d, batch_size %d, lr %f, reg %f, runs_dir %s" % (method,input_dim,num_classes,num_epochs,batch_size,lr,reg,runs_dir))
-
+        
         #self.model = nn.Linear(self.input_size, self.num_classes).to(self.device)
-        if method==Method.SOFTMAX:
+        if method==Method.SOFTMAX.value:
             self.device = torch.device('cuda:1')
             self.model = Softmax(input_dim,num_classes=num_classes, device=self.device)
-        elif method==Method.CNN2:
+        elif method==Method.CNN2.value:
             self.device = torch.device('cuda:2')
             self.model = CNN2(input_dim,num_classes=num_classes,device=self.device)        
-        elif method==Method.CNN5:
+        elif method==Method.CNN5.value:
             self.device = torch.device('cuda:1')
             self.model = CNN5(input_dim,num_classes=num_classes,device=self.device)        
-        elif method==Method.NN3:
+        elif method==Method.NN3.value:
             self.device = torch.device('cuda:0')
             self.model = Net3(input_dim,num_classes=num_classes,device=self.device)        
-        elif method==Method.NN5:
+        elif method==Method.NN5.value:
             self.device = torch.device('cuda:0')
             self.model = Net5(input_dim,num_classes=num_classes,device=self.device)        
         else:
