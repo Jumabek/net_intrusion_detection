@@ -19,25 +19,26 @@ def read_data(dataroot,file_ending='*.pcap_ISCX.csv'):
 def load_data(dataroot):
     data = read_data(dataroot,'*.csv')
     num_records,num_features = data.shape
-    print("there are {} flow records with {} feature dimension".format(num_records,num_features))
+    print("There are {} flow records with {} feature dimension".format(num_records,num_features))
+    print('Data loaded.\nData preprocessing started...')
     # there is white spaces in columns names e.g. ' Destination Port'
     # So strip the whitespace from  column names
     data = data.rename(columns=lambda x: x.strip())
-    print('stripped column names')
+    print('Stripped column names')
 
     df_label = data['Label']
     data = data.drop(columns=['Flow Packets/s','Flow Bytes/s','Label'])
-    print('dropped bad columns')
+    print('Dropped bad columns')
     
     nan_count = data.isnull().sum().sum()
     print('There are {} nan entries'.format(nan_count))
     
     if nan_count>0:
         data.fillna(data.mean(), inplace=True)
-        print('filled NAN')
+        print('Filled NAN')
 
     data = data.astype(float).apply(pd.to_numeric)
-    print('converted to numeric')
+    print('Converted to numeric')
     
     # lets count if there is NaN values in our dataframe( AKA missing features)
     assert data.isnull().sum().sum()==0, "There should not be any NaN"
