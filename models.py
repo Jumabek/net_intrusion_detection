@@ -1,18 +1,19 @@
 import torch
 import torch.nn as nn
-import torchvision
-import torchvision.transforms as transforms
 import torch.utils.data as utils
 from torch.utils.tensorboard import SummaryWriter
 import os
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn import metrics
-
+from enum import Enum
+import logging
 from os.path import join
 
-SEED=2
 
 class Softmax(nn.Module):
+    """ 
+    Softmax Regression Model
+    """
     def __init__(self,input_dim,num_classes,device):
         super(Softmax,self).__init__()
         self.classifier = nn.Linear(input_dim, num_classes).to(device)
@@ -24,6 +25,9 @@ class Softmax(nn.Module):
 
 
 class CNN2(nn.Module):
+    """ 
+    2-layer Convolutional Neural Network Model
+    """
     def __init__(self,input_dim,num_classes,device):
         super(CNN2, self).__init__()
         # kernel
@@ -55,6 +59,9 @@ class CNN2(nn.Module):
         return x
 
 class CNN5(nn.Module):
+    """ 
+    5-layer Convolutional Neural Network Model
+    """
     def __init__(self,input_dim,num_classes,device):
         super(CNN5, self).__init__()
         # kernel
@@ -99,6 +106,23 @@ class CNN5(nn.Module):
 
 
 class Net3(nn.Module):
+    """
+    A neural network model consisting of multiple layers, used for classification tasks.
+
+    Args:
+    - input_dim (int): The dimensionality of the input data.
+    - num_classes (int): The number of classes in the classification problem.
+    - device (str): The device to be used for running the computations.
+
+    Attributes:
+    - input_dim (int): The dimensionality of the input data.
+    - num_classes (int): The number of classes in the classification problem.
+    - device (str): The device to be used for running the computations.
+
+    Methods:
+    - forward(x): Defines the forward pass of the model, taking in an input tensor x and returning the output tensor.
+
+    """
     def __init__(self,input_dim,num_classes,device):
         super(Net3, self).__init__()
         # kernel
@@ -122,6 +146,19 @@ class Net3(nn.Module):
 
 
 class Net5(nn.Module):
+    """
+    A neural network model with 4 fully connected layers, using batch normalization and dropout for regularization.
+
+    Args:
+    - input_dim (int): the number of input features
+    - num_classes (int): the number of output classes
+    - device (torch.device): the device on which to run the model
+
+    Attributes:
+    - input_dim (int): the number of input features
+    - num_classes (int): the number of output classes
+    - model (nn.Sequential): the neural network architecture consisting of 4 fully connected layers
+    """
     def __init__(self,input_dim,num_classes,device):
         super(Net5, self).__init__()
         # kernel
@@ -155,42 +192,107 @@ class Net5(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-
+class Method(Enum):
+    SOFTMAX = "softmax"
+    CNN2 = "cnn2"
+    CNN5 = "cnn5"
+    NN3 = "nn3"
+    NN5 = "nn5"
 
 class Classifier:
-    def __init__(self,method,input_dim,num_classes,num_epochs,batch_size=100,lr=1e-3,reg=1e-5,runs_dir=None):
+    """
+    A classifier for machine learning models using PyTorch.
+
+    Parameters
+    ----------
+    method : str
+        The method used for classification. Currently supported options are
+        'softmax', 'cnn2', 'cnn5', 'nn3', and 'nn5'.
+    input_dim : int
+        The number of input features.
+    num_classes : int
+        The number of classes.
+    num_epochs : int
+        The number of training epochs.
+    batch_size : int, optional
+        The batch size. Default is 100.
+    lr : float, optional
+        The learning rate. Default is 1e-3.
+    reg : float, optional
+        The regularization strength. Default is 1e-5.
+    runs_dir : str, optional
+        The directory for saving training runs. Default is None.
+
+    Attributes
+    ----------
+    batch_size : int
+        The batch size.
+    num_epochs : int
+        The number of training epochs.
+    learning_rate : float
+        The learning rate.
+    reg : float
+        The regularization strength.
+    runs_dir : str
+        The directory for saving training runs.
+    device : torch.device
+        The device used for training.
+    model : torch.nn.Module
+        The PyTorch model used for classification.
+    criterion : torch.nn.Module
+        The PyTorch criterion used for optimization.
+    optimizer : torch.optim.Optimizer
+        The PyTorch optimizer used for training.
+
+    Methods
+    -------
+    fit(X, Y)
+        Trains the classifier on the input data X and labels Y.
+    predict(x, eval_mode=False)
+        Predicts the labels for the input data x.
+    """
+    def __init__(self,method,input_dim,num_classes,num_epochs,batch_size=100,lr=1e-3,reg=1e-5,runs_dir=None,seed=10):
         self.batch_size = batch_size
         self.num_epochs = num_epochs
         self.learning_rate = lr
         self.reg= reg
         self.runs_dir = runs_dir
+        self.seed = seed
         #self.device = 'cuda'
-
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+        file_handler = logging.FileHandler('training.log')
+        file_handler.setLevel(logging.DEBUG)
+        file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(file_formatter)
+        self.logger.addHandler(file_handler)
+        self.logger.info("Classifier initialized with method %s, input_dim %d, num_classes %d, num_epochs %d, batch_size %d, lr %f, reg %f, runs_dir %s" % (method,input_dim,num_classes,num_epochs,batch_size,lr,reg,runs_dir))
+        
         #self.model = nn.Linear(self.input_size, self.num_classes).to(self.device)
-        if method=='softmax':
+        if method==Method.SOFTMAX.value:
             self.device = torch.device('cuda:1')
             self.model = Softmax(input_dim,num_classes=num_classes, device=self.device)
-        elif method=='cnn2':
+        elif method==Method.CNN2.value:
             self.device = torch.device('cuda:2')
             self.model = CNN2(input_dim,num_classes=num_classes,device=self.device)        
-        elif method=='cnn5':
+        elif method==Method.CNN5.value:
             self.device = torch.device('cuda:1')
             self.model = CNN5(input_dim,num_classes=num_classes,device=self.device)        
-
-        elif method=='nn3':
+        elif method==Method.NN3.value:
             self.device = torch.device('cuda:0')
             self.model = Net3(input_dim,num_classes=num_classes,device=self.device)        
-        elif method=='nn5':
+        elif method==Method.NN5.value:
             self.device = torch.device('cuda:0')
             self.model = Net5(input_dim,num_classes=num_classes,device=self.device)        
         else:
-            print('There is no such classifier')
-            exit()
+            raise ValueError("Method must be one of 'softmax', 'cnn2', 'cnn5', 'nn3', or 'nn5'.")
+        
         self.criterion = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(),lr=self.learning_rate,betas=(0.9,0.99),eps=1e-08, weight_decay=self.reg, amsgrad=False)
 
     def fit(self,X,Y):
-        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.1, random_state=SEED)
+        self.logger.info('Starting training process...')
+        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.1, random_state=self.seed)
         for dev_index, val_index in sss.split(X, Y): # runs only once
                 X_dev = X[dev_index]
                 Y_dev = Y[dev_index]
@@ -230,8 +332,6 @@ class Classifier:
             best_epoch = 0
 
         no_improvement = 0
-        print("best epoch {}, best batch {}".format(resume_epoch,resume_batch))
-        print("bst acc ", best_acc)
         for epoch in range(resume_epoch,num_epochs):
             for i,(xi,yi) in enumerate(train_loader):
                 if epoch==resume_epoch and i<resume_batch:
@@ -266,16 +366,15 @@ class Classifier:
                     else:
                         no_improvement+=1
                         if no_improvement>=10:
-                            print("no improvement in accuracy for 10 iterations")
+                            self.logger.warning("No improvement in accuracy for 10 iterations.")
                             return
-                        
+                    self.logger.debug('Epoch [%d/%d], Step [%d/%d], Loss: %.4f', epoch+1, num_epochs, i+1, len(Y_dev)//self.batch_size, loss.item())
+
+
                     writer.add_scalar('Accuracy/Balanced Val',balanced_acc,seen_so_far)
 
                     acc = metrics.accuracy_score(Y_val,pred)*100
                     writer.add_scalar('Accuracy/Val',acc,seen_so_far)
-                        
-                    print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}' 
-                                               .format(epoch+1, num_epochs, i+1, len(Y_dev)//self.batch_size, loss.item()))
         writer.close()
 
     def predict(self,x,eval_mode=False):
@@ -295,8 +394,8 @@ class Classifier:
             for i in range(num_batch):
                 xi = tensor_x[i*bs:(i+1)*bs]
                 outputs = model(xi)
-                _, predi = torch.max(outputs.data,1)
-                pred = torch.cat((pred,predi))
+                _, predicted_labels = torch.max(outputs.data,1)
+                pred = torch.cat((pred,predicted_labels))
 
         return pred.cpu().numpy()
 
