@@ -17,14 +17,14 @@ https://docs.google.com/presentation/d/1Rjj1vF0hv8vSJWeDxk23nE4A4w3fv8tBdvsyIBpW
 
 ## Model Performance using K-Fold Cross-Validation
 
-| Classifier                        | 1-Fold Balanced Accuracy | 5-Fold Balanced Accuracy |
-| --------------------------------- | ------------------------ | ------------------------ |
-| Content Linear Softmax            | 80.99                    | 76.27                    |
-| Neural Network with 3 dense layer | 84.87                    | 85.73                    |
-| Neural Network with 5 dense layer | 85.57                    | 85.63                    |
-| 1D-CNN with 2conv 1fc layer       | 87.11                    | 87.13                    |
-| CNN with 5conv layer              | 83.29                    | 87.16                    |
-| Random Forest                     | 80.69                    | 80.09                    |
+| Classifier                        | 5-Fold Balanced Accuracy |
+| --------------------------------- | ------------------------ |
+| Content Linear Softmax            | 76.27                    |
+| Neural Network with 3 dense layer | 85.73                    |
+| Neural Network with 5 dense layer | 85.63                    |
+| 1D-CNN with 2conv 1fc layer       | 87.13                    |
+| CNN with 5conv layer              | 87.16                    |
+| Random Forest                     | 80.09                    |
 
 ### Softmax
 
