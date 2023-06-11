@@ -192,12 +192,27 @@ class Net5(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+class TabularTransformer(nn.Module):
+    def __init__(self, input_dim, d_model, nhead, num_layers, num_classes):
+        super(TabularTransformer, self).__init__()
+        self.embedding = nn.Linear(input_dim, d_model)
+        self.transformer = nn.Transformer(d_model, nhead, num_layers)
+        self.classifier = nn.Linear(d_model, num_classes)
+
+    def forward(self, x):
+        x = self.embedding(x)
+        x = self.transformer.encoder(x.unsqueeze(1))
+        x = x.squeeze(1)
+        x = self.classifier(x)
+        return x
+
 class Method(Enum):
     SOFTMAX = "softmax"
     CNN2 = "cnn2"
     CNN5 = "cnn5"
     NN3 = "nn3"
     NN5 = "nn5"
+    TRANSFORMER = "transformer"
 
 class Classifier:
     """
@@ -283,9 +298,13 @@ class Classifier:
             self.model = Net3(input_dim,num_classes=num_classes,device=self.device)        
         elif method==Method.NN5.value:
             self.device = torch.device('cuda:0')
-            self.model = Net5(input_dim,num_classes=num_classes,device=self.device)        
+            self.model = Net5(input_dim,num_classes=num_classes,device=self.device)  
+        elif method==Method.TRANSFORMER.value:
+            self.device = torch.device('cuda:0')
+            self.model = TabularTransformer(input_dim, d_model=64, nhead=4, num_layers=2, num_classes=num_classes).to(self.device)
+
         else:
-            raise ValueError("Method must be one of 'softmax', 'cnn2', 'cnn5', 'nn3', or 'nn5'.")
+            raise ValueError("Method must be one of 'softmax', 'cnn2', 'cnn5', 'nn3','nn5' or 'transformer'.")
         
         self.criterion = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(),lr=self.learning_rate,betas=(0.9,0.99),eps=1e-08, weight_decay=self.reg, amsgrad=False)
