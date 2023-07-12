@@ -270,13 +270,13 @@ class Classifier:
         
         #self.model = nn.Linear(self.input_size, self.num_classes).to(self.device)
         if method==Method.SOFTMAX.value:
-            self.device = torch.device('cuda:1')
+            self.device = torch.device('cuda:0')
             self.model = Softmax(input_dim,num_classes=num_classes, device=self.device)
         elif method==Method.CNN2.value:
-            self.device = torch.device('cuda:2')
+            self.device = torch.device('cuda:0')
             self.model = CNN2(input_dim,num_classes=num_classes,device=self.device)        
         elif method==Method.CNN5.value:
-            self.device = torch.device('cuda:1')
+            self.device = torch.device('cuda:0')
             self.model = CNN5(input_dim,num_classes=num_classes,device=self.device)        
         elif method==Method.NN3.value:
             self.device = torch.device('cuda:0')
