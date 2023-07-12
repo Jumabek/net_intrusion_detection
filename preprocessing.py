@@ -24,11 +24,11 @@ def load_data(dataroot):
     # there is white spaces in columns names e.g. ' Destination Port'
     # So strip the whitespace from  column names
     data = data.rename(columns=lambda x: x.strip())
-    print('Stripped column names')
+    print('Stripped column names with whitespaces')
 
     df_label = data['Label']
     data = data.drop(columns=['Flow Packets/s','Flow Bytes/s','Label'])
-    print('Dropped bad columns')
+    print('remove unnecessary columns: ',['Flow Packets/s','Flow Bytes/s','Label'])
     
     nan_count = data.isnull().sum().sum()
     print('There are {} nan entries'.format(nan_count))
