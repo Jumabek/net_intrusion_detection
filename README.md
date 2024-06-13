@@ -1,6 +1,6 @@
 # Deep Learning based network intrusion detection in PyTorch
 
-Net intrusion detection experiment for Final Project of DeepLearning class at Inha University.
+Net intrusion detection experiment for Final Project of DeepLearning class (2019) at Inha University.
 
 ## Dataset homepage: https://www.unb.ca/cic/datasets/ids-2017.html
 
